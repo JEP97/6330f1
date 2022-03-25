@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from "axios";
 import { makeStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
 import { Input, Header, Messages } from './index';
@@ -19,6 +20,12 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+const updateRead = async (conversation) => {
+  if (conversation && conversation.latestMessageText) {
+    await axios.post("/api/readreceipt", {conversationId : conversation.id});
+  }
+};
+
 const ActiveChat = ({
   user,
   conversations,
@@ -36,6 +43,15 @@ const ActiveChat = ({
   const isConversation = (obj) => {
     return obj !== {} && obj !== undefined;
   };
+
+  if (isConversation(conversation)){
+    
+    try{
+      updateRead(conversation);
+    } catch(error) {
+      console.log(error)
+    }
+  }
 
   return (
     <Box className={classes.root}>
