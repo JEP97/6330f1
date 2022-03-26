@@ -18,16 +18,24 @@ class Conversations(APIView):
             looking_for_last_unread = True
             looking_for_unread_count = True
             unread_count = 0
-            for message in convo_dict["messages"]:
+            for message in reversed(convo_dict["messages"]):
+
+                if not looking_for_last_unread and not looking_for_unread_count:
+                    return
+
                 if user_last_read:    
                     if looking_for_unread_count and self.isUnread(message, user_id, user_last_read):
                         unread_count += 1
                     else:
                         convo_dict["unreadCount"] = unread_count
                         looking_for_unread_count = False
+                else:
+                    unread_count += 1
+                    convo_dict["unreadCount"] = unread_count
 
                 if other_last_read:
-                    if looking_for_last_unread and self.isOtherLastRead(message, user_id, other_last_read):
+                    has_read = self.hasOtherRead(message, user_id, other_last_read)
+                    if looking_for_last_unread and has_read:
                         message["isLastReadByOther"] = True
                         looking_for_last_unread = False
                         
@@ -40,7 +48,7 @@ class Conversations(APIView):
             created_is_newer = user_last_read <= created_at
             return created_is_newer
     
-    def isOtherLastRead(self, message, user_id, other_last_read):
+    def hasOtherRead(self, message, user_id, other_last_read):
         if  message["senderId"] == user_id:
             created_at = message["createdAt"]
             last_read_is_newer = created_at <= other_last_read
