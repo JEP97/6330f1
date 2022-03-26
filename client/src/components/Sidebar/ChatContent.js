@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { Box, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
@@ -32,13 +32,13 @@ const useStyles = makeStyles((theme) => ({
 
 const ChatContent = ({ conversation }) => {
   const classes = useStyles();
+  const [unreadCount, setUnreadCount] = useState(conversation.unreadCount);
 
   const { otherUser } = conversation;
   const latestMessageText = conversation.id && conversation.latestMessageText;
-  const containsUnread = conversation.unreadCount > 0
 
   return (
-    <Box className={classes.root}>
+    <Box className={classes.root} onClick={() => setUnreadCount(0)}>
       <Box>
         <Typography className={classes.username}>
           {otherUser.username}
@@ -47,10 +47,10 @@ const ChatContent = ({ conversation }) => {
           {latestMessageText}
         </Typography>
       </Box>
-      {containsUnread ? (
+      {unreadCount > 0 ? (
         <Box>
           <Typography className={classes.unreadCount}>
-            {conversation.unreadCount}
+            {unreadCount}
           </Typography>
         </Box>
       ) : null}
