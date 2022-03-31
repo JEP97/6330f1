@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 class ReadReceipt(APIView):
     "Sets read receipt for users. Expects { conversationId }"
 
-    def post(self, request):
+    def patch(self, request):
         try:
             user = get_user(request)
 
@@ -18,15 +18,26 @@ class ReadReceipt(APIView):
             body = request.data
             conversation_id = body.get("conversationId")
 
+            conversation = None
+            queried_convo = None
+
             if conversation_id:
-                conversation = Conversation.objects.filter(id=conversation_id).first()
-                if sender_id == conversation.user1.id:
-                    conversation.user1ReadReceipt = timezone.now()
-                elif sender_id == conversation.user2.id:
-                    conversation.user2ReadReceipt = timezone.now()
-                conversation.save()
-                return HttpResponse(status=200)
+                conversation = Conversation.objects.filter(id=conversation_id)
+                queried_convo = conversation.first()
+                
+                if not queried_convo:
+                    return HttpResponse(status=204)
+                if queried_convo.user1.id != sender_id and queried_convo.user2.id != sender_id:
+                    return HttpResponse(status=401)
+
+                if sender_id == queried_convo.user1.id:
+                    conversation.update(user1ReadReceipt=timezone.now())
+                    return HttpResponse(status=200)
+                elif sender_id == queried_convo.user2.id:
+                    conversation.update(user2ReadReceipt=timezone.now())
+                    return HttpResponse(status=200)
+                else:
+                    return HttpResponse(status=204)
             return HttpResponse(status=400)
         except Exception as e:
-            print(e)
             return HttpResponse(status=500)

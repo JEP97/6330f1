@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import { Box, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
@@ -32,10 +32,18 @@ const useStyles = makeStyles((theme) => ({
 
 const ChatContent = ({ conversation }) => {
   const classes = useStyles();
-  const [unreadCount, setUnreadCount] = useState(conversation.unreadCount);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showUnreadAttributes, setShowUnreadAttributes] = useState(false);
 
   const { otherUser } = conversation;
   const latestMessageText = conversation.id && conversation.latestMessageText;
+
+  useEffect(() => {
+    setUnreadCount(conversation.unreadCount);
+  }, [conversation.unreadCount])
+  useEffect(() => {
+    setShowUnreadAttributes(unreadCount > 0);
+  }, [unreadCount])
 
   return (
     <Box className={classes.root} onClick={() => setUnreadCount(0)}>
@@ -43,17 +51,17 @@ const ChatContent = ({ conversation }) => {
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={classes.previewText}>
+        <Typography style={{fontWeight: showUnreadAttributes && "bold" }} className={classes.previewText}>
           {latestMessageText}
         </Typography>
       </Box>
-      {unreadCount > 0 ? (
+      {showUnreadAttributes && 
         <Box>
           <Typography className={classes.unreadCount}>
             {unreadCount}
           </Typography>
         </Box>
-      ) : null}
+      }
     </Box>
   );
 };

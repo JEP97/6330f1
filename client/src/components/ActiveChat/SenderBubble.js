@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Avatar, Box, Typography } from '@material-ui/core';
 
@@ -33,8 +33,13 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SenderBubble = ({ time, text, readPhotoUrl=null }) => {
+const SenderBubble = ({ time, text, readPhotoUrl }) => {
   const classes = useStyles();
+  const [showPhotoUrl, setShowPhotoUrl] = useState(false);
+  
+  useEffect(() => {
+    setShowPhotoUrl(readPhotoUrl !== undefined)
+  }, [readPhotoUrl])
 
   return (
     <Box className={classes.root}>
@@ -42,9 +47,9 @@ const SenderBubble = ({ time, text, readPhotoUrl=null }) => {
       <Box className={classes.bubble}>
         <Typography className={classes.text}>{text}</Typography>
       </Box>
-      {readPhotoUrl !== null ? 
+      {showPhotoUrl && 
         <Avatar src={readPhotoUrl} className={classes.readAvatar}/>
-      : null}
+      }
     </Box>
   );
 };

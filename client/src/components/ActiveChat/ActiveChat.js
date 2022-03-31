@@ -21,8 +21,8 @@ const useStyles = makeStyles(() => ({
 }));
 
 const updateRead = async (conversation) => {
-  if (conversation && conversation.latestMessageText) {
-    await axios.post("/api/readreceipt", {conversationId : conversation.id});
+  if (conversation && conversation.messages.length > 0) {
+    await axios.patch("/api/conversations/readreceipt", {conversationId : conversation.id});
   }
 };
 
@@ -49,7 +49,7 @@ const ActiveChat = ({
     try{
       updateRead(conversation);
     } catch(error) {
-      console.log(error)
+      console.error(error)
     }
   }
 
