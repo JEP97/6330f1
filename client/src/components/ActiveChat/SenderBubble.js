@@ -38,7 +38,7 @@ const SenderBubble = ({ time, text, readPhotoUrl }) => {
   const [showPhotoUrl, setShowPhotoUrl] = useState(false);
   
   useEffect(() => {
-    setShowPhotoUrl(readPhotoUrl !== undefined)
+    setShowPhotoUrl(readPhotoUrl !== false && readPhotoUrl !== undefined)
   }, [readPhotoUrl])
 
   return (

@@ -1,4 +1,5 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Box, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
@@ -30,23 +31,33 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+
 const ChatContent = ({ conversation }) => {
   const classes = useStyles();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(conversation.unreadCount);
   const [showUnreadAttributes, setShowUnreadAttributes] = useState(false);
-
+  
   const { otherUser } = conversation;
   const latestMessageText = conversation.id && conversation.latestMessageText;
-
+  
+  const updateRead = async (conversation) => {
+    if (conversation && conversation.messages.length > 0) {
+      try {
+        await axios.patch("/api/conversations/readreceipt", {conversationId : conversation.id});
+        setUnreadCount(0);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+  
   useEffect(() => {
-    setUnreadCount(conversation.unreadCount);
-  }, [conversation.unreadCount])
-  useEffect(() => {
-    setShowUnreadAttributes(unreadCount > 0);
+    setShowUnreadAttributes(unreadCount > 0)
   }, [unreadCount])
 
+
   return (
-    <Box className={classes.root} onClick={() => setUnreadCount(0)}>
+    <Box className={classes.root} onClick={() => updateRead(conversation)}>
       <Box>
         <Typography className={classes.username}>
           {otherUser.username}
