@@ -37,7 +37,7 @@ class Conversations(APIView):
                 convo_dict = {
                     "id": convo.id,
                     "messages": [
-                        message.to_dict(["id", "text", "senderId", "createdAt", "isReadByOther"])
+                        message.to_dict(["id", "text", "senderId", "createdAt", "isRead"])
                         for message in convo.messages.all()
                     ],
                 }
@@ -52,8 +52,8 @@ class Conversations(APIView):
                     convo_dict["otherUser"] = convo.user2.to_dict(user_fields)
 
                 # get all unread data once "otherUser" is found
-                convo_dict["unreadCount"] = convo.messages.all().filter(senderId=convo_dict["otherUser"]["id"], isReadByOther=False).count()
-                last_read_message = convo.messages.all().filter(senderId=user_id, isReadByOther=True).last()
+                convo_dict["unreadCount"] = convo.messages.all().filter(senderId=convo_dict["otherUser"]["id"], isRead=False).count()
+                last_read_message = convo.messages.all().filter(senderId=user_id, isRead=True).last()
                 if last_read_message:
                     convo_dict["lastReadMessage"] = last_read_message.id
 
@@ -72,5 +72,4 @@ class Conversations(APIView):
                 safe=False,
             )
         except Exception as e:
-            print(e)
             return HttpResponse(status=500)

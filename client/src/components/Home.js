@@ -49,6 +49,16 @@ const Home = ({ user, logout }) => {
     setConversations((prev) => prev.filter((convo) => convo.id));
   };
 
+  const updateRead = async (conversationId) => {
+    try {
+      await axios.patch("/api/conversations/readreceipt", {conversationId : conversationId});
+      const { data } = await axios.get("/api/conversations");
+      setConversations(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const saveMessage = async (body) => {
     const { data } = await axios.post("/api/messages", body);
     return data;
@@ -70,6 +80,7 @@ const Home = ({ user, logout }) => {
         addNewConvo(body.recipientId, data.message);
       } else {
         addMessageToConversation(data);
+        updateRead(body.conversationId)
       }
       
       sendMessage(data, body);
@@ -77,6 +88,16 @@ const Home = ({ user, logout }) => {
       console.error(error);
     }
   };
+
+  const getUnreadCount = useCallback((messages, otherUserId) => {
+    let unreadCount = 0;
+    messages.forEach(message => {
+      if (!message.isRead && message.senderId === otherUserId){
+        unreadCount++;
+      }
+    })
+    return unreadCount;
+  }, [])
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
@@ -86,13 +107,16 @@ const Home = ({ user, logout }) => {
           convoCopy.messages = [message, ...convoCopy.messages];
           convoCopy.latestMessageText = message.text;
           convoCopy.id = message.conversationId;
+          if (message.senderId === convoCopy.otherUser.id){
+            convoCopy.unreadCount = getUnreadCount(convoCopy.messages, convoCopy.otherUser.id);
+          }
           return convoCopy;
         } else {
           return convo;
         }
       }));
     },
-    [setConversations],
+    [setConversations, getUnreadCount],
   );
 
   const addMessageToConversation = useCallback(
@@ -104,28 +128,39 @@ const Home = ({ user, logout }) => {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
+          unreadCount: 1,
         };
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
       }
-
-      setConversations((prev) => 
+      else{
+        setConversations((prev) => 
         prev.map((convo) => {
           if (convo.id === message.conversationId){
             const convoCopy = {...convo};
-            convoCopy.messages = [...convoCopy.messages, message];
             convoCopy.latestMessageText = message.text;
+            convoCopy.messages = [...convoCopy.messages, message];
+            if (message.senderId === convoCopy.otherUser.id){
+              convoCopy.unreadCount = getUnreadCount(convoCopy.messages, convoCopy.otherUser.id);
+            }
             return convoCopy;
           } else {
             return convo;
           }
         }));
+      }
     },
-    [setConversations],
+    [setConversations, getUnreadCount],
   );
 
   const setActiveChat = (username) => {
     setActiveConversation(username);
+    const conversation = conversations
+    ? conversations.find(
+        (conversation) => conversation.otherUser.username === username
+      )
+    : {};
+    updateRead(conversation.id);
   };
 
   const addOnlineUser = useCallback((id) => {

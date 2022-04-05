@@ -30,14 +30,11 @@ class ReadReceipt(APIView):
                 queried_convo = conversation.first()
                 
                 if not queried_convo:
-                    return HttpResponse(status=204)
+                    return HttpResponse(status=404)
                 if queried_convo.user1.id != sender_id and queried_convo.user2.id != sender_id:
-                    return HttpResponse(status=401)
-                elif queried_convo.user1.id == sender_id or queried_convo.user2.id == sender_id:
-                    queried_convo.messages.all().filter(~Q(senderId=sender_id), isReadByOther=False).update(isReadByOther=True)
-                    return HttpResponse(status=200)
-                else:
-                    return HttpResponse(status=204)
+                    return HttpResponse(status=403)
+                queried_convo.messages.all().filter(~Q(senderId=sender_id), isRead=False).update(isRead=True)
+                return HttpResponse(status=204)
             return HttpResponse(status=400)
         except Exception as e:
             return HttpResponse(status=500)
