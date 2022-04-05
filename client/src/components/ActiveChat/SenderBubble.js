@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Typography } from '@material-ui/core';
+import { Avatar, Box, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -13,6 +13,12 @@ const useStyles = makeStyles(() => ({
     color: '#BECCE2',
     fontWeight: 'bold',
     marginBottom: 5,
+  },
+  readAvatar: {
+    height: 20,
+    width: 20,
+    borderRadius: '50%',
+    backgroundColor: '#bbb'
   },
   text: {
     fontSize: 14,
@@ -27,8 +33,13 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const SenderBubble = ({ time, text }) => {
+const SenderBubble = ({ time, text, readPhotoUrl }) => {
   const classes = useStyles();
+  const [showPhotoUrl, setShowPhotoUrl] = useState(false);
+  
+  useEffect(() => {
+    setShowPhotoUrl(readPhotoUrl !== false && readPhotoUrl !== undefined)
+  }, [readPhotoUrl])
 
   return (
     <Box className={classes.root}>
@@ -36,6 +47,9 @@ const SenderBubble = ({ time, text }) => {
       <Box className={classes.bubble}>
         <Typography className={classes.text}>{text}</Typography>
       </Box>
+      {showPhotoUrl && 
+        <Avatar src={readPhotoUrl} className={classes.readAvatar}/>
+      }
     </Box>
   );
 };

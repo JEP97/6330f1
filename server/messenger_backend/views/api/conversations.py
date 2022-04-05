@@ -12,7 +12,7 @@ class Conversations(APIView):
     """get all conversations for a user, include latest message text for preview, and all messages
     include other user model so we have info on username/profile pic (don't include current user info)
     TODO: for scalability, implement lazy loading"""
-
+    
     def get(self, request: Request):
         try:
             user = get_user(request)
@@ -37,11 +37,10 @@ class Conversations(APIView):
                 convo_dict = {
                     "id": convo.id,
                     "messages": [
-                        message.to_dict(["id", "text", "senderId", "createdAt"])
+                        message.to_dict(["id", "text", "senderId", "createdAt", "isRead"])
                         for message in convo.messages.all()
                     ],
                 }
-
                 # set properties for notification count and latest message preview
                 convo_dict["latestMessageText"] = convo_dict["messages"][-1]["text"]
 
@@ -52,12 +51,17 @@ class Conversations(APIView):
                 elif convo.user2 and convo.user2.id != user_id:
                     convo_dict["otherUser"] = convo.user2.to_dict(user_fields)
 
+                # get all unread data once "otherUser" is found
+                convo_dict["unreadCount"] = convo.messages.all().filter(senderId=convo_dict["otherUser"]["id"], isRead=False).count()
+                last_read_message = convo.messages.all().filter(senderId=user_id, isRead=True).last()
+                if last_read_message:
+                    convo_dict["lastReadMessage"] = last_read_message.id
+
                 # set property for online status of the other user
                 if convo_dict["otherUser"]["id"] in online_users:
                     convo_dict["otherUser"]["online"] = True
                 else:
                     convo_dict["otherUser"]["online"] = False
-
                 conversations_response.append(convo_dict)
             conversations_response.sort(
                 key=lambda convo: convo["messages"][-1]["createdAt"],
